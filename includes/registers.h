@@ -13,11 +13,12 @@ byte sp;
 // Data bus
 byte data;
 
+// Flags
+// N V - B D I Z C
+byte flags;
+
 // Address bus
 uint16_t address;
-
-// Clock
-unsigned int mHz;
 
 // Memory
 byte memory[0xFFFF];

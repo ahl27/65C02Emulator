@@ -26,9 +26,15 @@ byte read_byte(uint16_t address){
   return mem;
 }
 
-void write_byte(uint16_t address, byte value){
+void write_byte(byte* address, byte value){
   sleep(elapsedclock);
   memory[address] = value;
+  return;
+}
+
+void set_pc(uint16_t value){
+  sleep(elapsedclock*2);
+  pc = value;
   return;
 }
 
@@ -41,9 +47,9 @@ void execute_instruction(){
    */
 
   uint8_t opcode = read_byte(pc++);
-  uint8_t cc  = opcode & 0x03;      // AND with 0000 0011 = 0x03
-  uint8_t bbb = opcode & 0x1C;      // AND with 0001 1100 = 0x1C
-  uint8_t aaa = opcode & 0xE0;      // AND with 1110 0000 = 0xE0
+  uint8_t cc  = opcode & 0x03;             // AND with 0000 0011 = 0x03
+  uint8_t bbb = (opcode & 0x1C) >> 2;      // AND with 0001 1100 = 0x1C
+  uint8_t aaa = (opcode & 0xE0) >> 5;      // AND with 1110 0000 = 0xE0
   uint16_t addressl;
   switch(cc){
     case 1:
@@ -59,7 +65,7 @@ void execute_instruction(){
       run_instruction_group3(address, aaa);
       break;
 
-    // Note that there is no case 3, 
+    // Note that there is no case 3
   }
 }
 
@@ -68,7 +74,7 @@ void execute_instruction(){
   Later functions will actually read/write to this line
   These are for group 1 (cc == 01 opcodes) instructions
 */
-uint16_t decode_addrmode_group1(byte addrmode){
+byte* decode_addrmode_group1(byte addrmode){
   uint16_t address;
   switch (addrmode){
     case 0:        // (zero page, X)                  {X, indirect}
@@ -114,10 +120,10 @@ uint16_t decode_addrmode_group1(byte addrmode){
       break;
   }
 
-  return address;
+  return address+memory;
 }
 
-uint16_t decode_addrmode_group23(byte addrmode){
+byte* decode_addrmode_group23(byte addrmode){
   uint16_t address;
   switch(addrmode){
     case 0:       // #immediate
@@ -129,9 +135,7 @@ uint16_t decode_addrmode_group23(byte addrmode){
       break;
 
     case 2:       // accumulator
-      // TODO: Some way to let the program know that the accumulator is the address
-      address = 0;
-      break;
+      return (&a);
 
     case 3:       // absolute
       address = (read_byte(pc+1) << 8) | read_byte(pc);
@@ -152,6 +156,95 @@ uint16_t decode_addrmode_group23(byte addrmode){
       break
   }
 
-  return address;
+  return (memory+address);
 }
 
+void run_instruction_group1(byte *address, uint8_t highbits){
+  switch(highbits){
+    case 0:
+      ORA(address);
+      break;
+    case 1:
+      AND(address);
+      break;
+    case 2:
+      EOR(address);
+      break;
+    case 3:
+      ADC(address);
+      break;
+    case 4:
+      STA(address);
+      break;
+    case 5:
+      LDA(address);
+      break;
+    case 6:
+      CMP(address);
+      break;
+    case 7:
+      SBC(address);
+      break;
+  }
+
+  return;
+}
+
+void run_instruction_group2(byte *address, uint8_t highbits){
+  switch(highbits){
+    case 0:
+      ASL(address);
+      break;
+    case 1:
+      ROL(address);
+      break;
+    case 2:
+      LSR(address);
+      break;
+    case 3:
+      ROR(address);
+      break;
+    case 4:
+      STX(address);
+      break;
+    case 5:
+      LDX(address);
+      break;
+    case 6:
+      DEC(address);
+      break;
+    case 7:
+      INC(address);
+      break;
+  }
+  return;
+}
+
+
+void run_instruction_group3(byte *address, uint8_t highbits){
+  switch(highbits){
+    // case 0:
+    //    No case 0
+    case 1:
+      BIT(address);
+      break;
+    case 2:
+    case 3:
+      JMP(address);
+      break;
+    case 4:
+      STY(address);
+      break;
+    case 5:
+      LDY(address);
+      break;
+    case 6:
+      CPY(address);
+      break;
+    case 7:
+      CPX(address);
+      break;
+  }
+
+  return;
+}

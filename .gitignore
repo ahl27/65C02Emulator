@@ -50,3 +50,7 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+
+# Random other stuff
+.DS_Store
