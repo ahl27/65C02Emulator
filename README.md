@@ -12,4 +12,5 @@ Priorities for this project are:
   3. Working emulation of 65c02 instruction set
   4. Faithful recreation of 65c02 bugs (ex. indirect jump to page boundary)
 
-I am currently at (1).
+I am currently at (1)--all instructions are implemented. 
+Next steps are implementing a way to load hex files as ram, then testing all the operations.
