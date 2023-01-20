@@ -26,9 +26,9 @@ byte read_byte(byte *address){
 }
 
 uint16_t read_address(byte offset){
-  uint16_t val = read_byte(memory+offset+1);
-  val <<= 8;
-  val |= read_byte(memory+offset);
+  uint16_t val = read_byte(memory+offset);
+  offset++;
+  val |= (read_byte(memory+offset) << 8);
   return(val);
 }
 

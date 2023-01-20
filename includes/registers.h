@@ -24,6 +24,6 @@ byte flags;
 uint16_t address;
 
 // Memory
-byte memory[0xFFFF];
+byte memory[0x10000];
 
 #endif
