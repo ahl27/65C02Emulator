@@ -1,6 +1,8 @@
 #include "operations.h"
 
-// Group 1 Instructions
+/*********
+  Group 1 Instructions
+*********/
 void ORA(byte *addr){
   // OR value with the accumulator
   write_byte(&a, a | (*addr));
@@ -38,11 +40,11 @@ void ADC(byte *addr){
   // Add with Carry
 
   // TODO: some way to interpret decimal mode
-  if ((flag & 0x08) > 0){
+  if ((flags & 0x08) > 0){
     // Decimal conversion will go here
   }
 
-  uint16_t res = a + (*addr) + (flag & 1);
+  uint16_t res = a + (*addr) + (flags & 1);
   uint8_t vflag = !((a ^ (*addr)) & 0x80) && ((a ^ (*addr)) * 0x80);
   write_byte(&a, res & 0xFF);
 
@@ -63,7 +65,7 @@ void STA(byte *addr){
 
 void LDA(byte *addr){
   // Load value from memory location to accumulator
-  write_byte(&a, addr);
+  write_byte(&a, *addr);
 
   // Set N,Z flags (0x7D = 0111 1101)
   flags = (flags & 0x7D) | 
@@ -78,7 +80,7 @@ void CMP(byte *addr){
   // only flags N,Z,C
   byte vflag = flags & 0x40;
   byte astate = a;
-  SBC(*addr);
+  SBC(addr);
 
   // Reset accumulator
   a = astate;
@@ -96,8 +98,9 @@ void SBC(byte *addr){
 	return;
 }
 
-
-// Group 2 Instructions
+/*********
+  Group 2 Instructions
+*********/
 void ASL(byte *addr){
   byte newcarry = (*addr) & 0x80;
   byte newval = (*addr) << 1;
@@ -159,7 +162,7 @@ void STX(byte *addr){
 
 void LDX(byte *addr){
   // Load value from memory location to X
-  write_byte(&x, addr);
+  write_byte(&x, *addr);
 
   // Set N,Z flags (0x7D = 0111 1101)
   flags = (flags & 0x7D) | 
@@ -173,7 +176,7 @@ void LDX(byte *addr){
 void DEC(byte *addr){
 	// Decrement memory address
   byte newval = (*addr)-1;
-  write_byte(&addr, newval);
+  write_byte(addr, newval);
 
   // Set N,Z flags (0x7D = 0111 1101)
   flags = (flags & 0x7D) | 
@@ -185,7 +188,7 @@ void DEC(byte *addr){
 void INC(byte *addr){
   // Increment memory address
   byte newval = (*addr)+1;
-  write_byte(&addr, newval);
+  write_byte(addr, newval);
 
   // Set N,Z flags (0x7D = 0111 1101)
   flags = (flags & 0x7D) | 
@@ -194,7 +197,10 @@ void INC(byte *addr){
 	return;
 }
 
-// Group 3 Instructions
+/*********
+  Group 3 Instructions
+*********/
+
 void BIT(byte *addr){
   // BIT sets Z as though the value were AND'd with the accumulator
   // N,V are set to match bits 7,6 (resp.) in the value stored at the address
@@ -209,7 +215,7 @@ void BIT(byte *addr){
 
 void JMP(byte *addr){
   // This won't accurately recreate the indirect jump to last byte of page bug
-  uint16_t newaddr = ((*addr) << 8) | (*(addr+1));
+  uint16_t newaddr = read_address(*addr);
   set_pc(newaddr);
 	return;
 }
@@ -222,7 +228,7 @@ void STY(byte *addr){
 
 void LDY(byte *addr){
   // Load value from memory location to Y
-  write_byte(&y, addr);
+  write_byte(&y, *addr);
 
   // Set N,Z flags (0x7D = 0111 1101)
   flags = (flags & 0x7D) | 
@@ -242,7 +248,7 @@ void CPY(byte *addr){
   // Little hacky, I'm just temporarily setting a to y
   // so I can reuse SBC code. 
   a = y;
-  SBC(*addr);
+  SBC(addr);
 
   // Reset accumulator
   a = astate;
@@ -262,12 +268,110 @@ void CPX(byte *addr){
 
   // See CPY
   a = x;
-  SBC(*addr);
+  SBC(addr);
 
   // Reset accumulator
   a = astate;
 
   // Reset V Flag
   flags = (flags & 0xBF) | vflag;
+  return;
+}
+
+/*********
+  Single-Byte Instructions 
+*********/
+// Lots of these do the same thing, so we're going to just combine instructions
+// instruction decoder can handle picking which to use
+
+// Push from register to stack
+void push_to_stack(byte *registerptr){
+  uint16_t offset = 0x10 | stackpointer;
+  write_byte(memory+offset, *registerptr);
+  stackpointer--;
+  return;
+}
+
+// Pull from stack to register
+void pull_from_stack(byte *registerptr){
+  stackpointer++;
+  uint16_t offset = 0x10 | stackpointer;
+  byte val = read_byte(memory+offset);
+  // This only updates if we're writing to a register
+  // So I'm going to update flags first, 
+  flags = (flags & 0x7D) | 
+          ((val & 0x80)) |           // N
+          ((val==0) << 1);           // Z
+
+  // then pull the value
+  // This way if we write to SR it should work as expected
+  write_byte(registerptr, val);
+  return;
+}
+
+// Transfer from register 1 to register 2
+void transfer_registers(byte *reg1, byte *reg2){
+  byte val = read_byte(reg1);
+  write_byte(reg2, val);
+  // Modifies N,Z flags unless calling TXS
+  if(reg2 != &stackpointer){
+    flags = (flags & 0x7D) | 
+            ((val & 0x80)) |           // N
+            ((val==0) << 1);           // Z
+  }
+  return;
+}
+
+// bit set routines
+void set_clear_flag(uint8_t shiftamt, uint8_t val){
+  byte newval = val << shiftamt;
+  flags = (flags & !(1 << shiftamt)) | newval;
+  return;
+}
+
+void NOP(){
+  return;
+}
+
+/*********
+  Interrupt/Subroutine Instructions
+*********/
+void BRK(){
+  // Not sure how to implement this one yet
+  return;
+}
+
+void JSR(){
+  // Push status flags, low byte, high byte
+  // Note stack grows downward
+  byte *val;
+  push_to_stack(&flags);
+  *val = pc & 0xFF;
+  push_to_stack(val);
+  *val = pc >> 8;
+  push_to_stack(val);
+  JMP(memory+pc);
+  return;
+}
+
+void RTI(){
+  // Not sure how to implement this one yet
+  return;
+}
+
+void RTS(){
+  // call JMP on location of stack pointer
+  // Note stack grows downwards:
+  //    FLAGS
+  //    high byte
+  //    low byte
+  // -> (empty)
+
+  // JMP on stackpointer+2 will pull (high << 8) | low
+  stackpointer += 2;
+  JMP(memory+(0x10 | stackpointer));
+
+  // stackpointer now at correct location, we can pull the status flags
+  pull_from_stack(&flags);
   return;
 }

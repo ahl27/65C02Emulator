@@ -1,4 +1,10 @@
+#ifndef OPERATIONSINCLUDE
+#define OPERATIONSINCLUDE
+
 #include <stdint.h>
+#include "registers.h"
+#include "core_functionality.h"
+
 typedef uint8_t byte;
 
 // Group 1 Instructions
@@ -49,4 +55,25 @@ void CPY(byte *addr);
 
 void CPX(byte *addr);
 
+// Single-Byte Instructions
+// indexes 0x08 - 0xF8
+
+// Going to combine some instructions here
+void push_to_stack(byte *registerptr);
+void pull_from_stack(byte *registerptr);
+void transfer_registers(byte *reg1, byte *reg2);
+void set_clear_flag(uint8_t shiftamt, uint8_t val);
+
+void NOP();
+
+// Interrupt / Subroutine Instructions
+void BRK();
+
+void JSR(byte *addr);
+
+void RTI();
+
+void RTS();
+
 // Miscellaneous Instructions (to be added)
+#endif

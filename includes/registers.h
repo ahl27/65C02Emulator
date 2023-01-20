@@ -1,3 +1,6 @@
+#ifndef REGISTERINCLUDE
+#define REGISTERINCLUDE
+
 #include <stdint.h>
 typedef uint8_t byte;
 
@@ -8,7 +11,7 @@ byte a, x, y;
 uint16_t pc;
 
 // Stack Pointer
-byte sp;
+byte stackpointer;
 
 // Data bus
 byte data;
@@ -22,3 +25,5 @@ uint16_t address;
 
 // Memory
 byte memory[0xFFFF];
+
+#endif
