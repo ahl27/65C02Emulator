@@ -52,6 +52,8 @@ void memory_explorer(){
   uint8_t curpage = startpage;
 
   initscr();
+  if (has_colors())
+    start_color();
   clear();
   noecho();
   cbreak(); /* Line buffering disabled. pass on everything */
@@ -86,7 +88,7 @@ void memory_explorer(){
       case 0x0A:
       case KEY_ENTER:
       case 0x0D:
-        if (strncmp(quitstring, charbuff, 4)==0)
+        if (strncmp(quitstring, charbuff, 4)==0 || (charbuff[0] == 'q' && charbuff[1] == ' '))
           quit=true;
         else if (strncmp(homestring, charbuff, 4)==0){
           curpage=startpage;
@@ -120,9 +122,17 @@ void clear_charbuff(char *arr, int arrlen, char fill){
 
 uint8_t process_charbuff(char *arr, int arrlen, uint8_t mempage, char fill){
   char *ptr;
-  uint8_t retval = (uint8_t)strtol(arr, &ptr, 16);
-  if (ptr == arr) 
-    retval = mempage;
+  uint8_t retval = mempage;
+  if(arr[0] == 's'){
+    int num_instructions = (int)strtol(arr+1, &ptr, 10);
+    if (num_instructions == 0) num_instructions = 1;
+    for (int i=0; i<num_instructions; i++)
+      execute_instruction();
+  } else {
+    retval = (uint8_t)strtol(arr, &ptr, 16);
+    if (ptr == arr) 
+      retval = mempage;
+  } 
   clear_charbuff(arr, arrlen, fill);
 
   return retval;
@@ -154,7 +164,30 @@ void print_page_curses(WINDOW *menu_win, uint8_t mempage, char *charbuff){
   }
   printw("  |%16s|", charout);
 
-  printw("\n\nPress left or right arrows to move pages, or quit to exit.\n> %s", charbuff);
+  printw("\n\nRegisters:\n");
+  printw("A: 0x%02X\t\tX: 0x%02X\t\tY: 0x%02X\t\t", a, x, y);
+  printw("PC: 0x%04X\tStack: 0x01%02X\n\n", pc, stackpointer);
+  char flagschar[] = {'N', 'V', '-', 'B', 'D', 'I', 'Z', 'C'};
+
+  // Printing flags with colors (if enabled)
+  if (has_colors()){
+    init_pair(1, COLOR_BLACK, COLOR_RED);
+    init_pair(2, COLOR_BLACK, COLOR_GREEN);
+    printw("Flags: ");
+    for (int i=7; i>=0; i--){
+      int pairnum = (((1 << i) & flags) > 0) + 1;
+      attron(COLOR_PAIR(pairnum));
+      addch(flagschar[i]);
+      attroff(COLOR_PAIR(pairnum));
+      addch(' ');
+    }
+  } else {
+    for (int i=7; i>=0; i--){
+      printw("%d ",(((1 << i) & flags) > 0) + 1);
+    }
+    printw("\n       N V - B D I Z C");
+  }
+  printw("\n\nPress left or right arrows to move pages, 's' to run an instruction, or quit to exit.\n> %s", charbuff);
   refresh();
   return;
 }
