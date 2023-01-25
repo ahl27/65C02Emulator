@@ -52,8 +52,10 @@ void memory_explorer(){
   uint8_t curpage = startpage;
 
   initscr();
-  if (has_colors())
+  if (has_colors()){
     start_color();
+    attron(A_BOLD);
+  }
   clear();
   noecho();
   cbreak(); /* Line buffering disabled. pass on everything */
@@ -165,15 +167,17 @@ void print_page_curses(WINDOW *menu_win, uint8_t mempage, char *charbuff){
   printw("  |%16s|", charout);
 
   printw("\n\nRegisters:\n");
-  printw("A: 0x%02X\t\tX: 0x%02X\t\tY: 0x%02X\t\t", a, x, y);
-  printw("PC: 0x%04X\tStack: 0x01%02X\n\n", pc, stackpointer);
+  printw("A: 0x%02X\t\tProgram: 0x%04X\n", a, pc);
+  printw("X: 0x%02X\t\t  Stack: 0x01%02X\n", x, stackpointer);
+  printw("Y: 0x%02X\t\t", y);
+  //printw("PC: 0x%04X\tStack: 0x01%02X\n\n", pc, stackpointer);
   char flagschar[] = {'N', 'V', '-', 'B', 'D', 'I', 'Z', 'C'};
 
   // Printing flags with colors (if enabled)
+  printw("\n\nFlags: ");
   if (has_colors()){
-    init_pair(1, COLOR_BLACK, COLOR_RED);
-    init_pair(2, COLOR_BLACK, COLOR_GREEN);
-    printw("Flags: ");
+    init_pair(1, COLOR_RED, COLOR_BLACK);
+    init_pair(2, COLOR_GREEN, COLOR_BLACK);
     for (int i=7; i>=0; i--){
       int pairnum = (((1 << i) & flags) > 0) + 1;
       attron(COLOR_PAIR(pairnum));
@@ -181,9 +185,10 @@ void print_page_curses(WINDOW *menu_win, uint8_t mempage, char *charbuff){
       attroff(COLOR_PAIR(pairnum));
       addch(' ');
     }
+
   } else {
     for (int i=7; i>=0; i--){
-      printw("%d ",(((1 << i) & flags) > 0) + 1);
+      printw("%d ",((1 << i) & flags) > 0);
     }
     printw("\n       N V - B D I Z C");
   }
