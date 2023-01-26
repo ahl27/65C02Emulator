@@ -130,6 +130,12 @@ uint8_t process_charbuff(char *arr, int arrlen, uint8_t mempage, char fill){
     if (num_instructions == 0) num_instructions = 1;
     for (int i=0; i<num_instructions; i++)
       execute_instruction();
+  } else if (arr[0] == 'r'){
+    int curval = 1;
+    // run until a BRK command
+    while (curval != 0){
+      curval = execute_instruction();
+    }
   } else {
     retval = (uint8_t)strtol(arr, &ptr, 16);
     if (ptr == arr) 
@@ -170,6 +176,10 @@ void print_page_curses(WINDOW *menu_win, uint8_t mempage, char *charbuff){
   printw("A: 0x%02X\t\tProgram: 0x%04X\n", a, pc);
   printw("X: 0x%02X\t\t  Stack: 0x01%02X\n", x, stackpointer);
   printw("Y: 0x%02X\t\t", y);
+  printw(" LastOp: ");
+  if (lastop >= 0){
+    printw("0x%02X", lastop&0xFF);
+  }
   //printw("PC: 0x%04X\tStack: 0x01%02X\n\n", pc, stackpointer);
   char flagschar[] = {'N', 'V', '-', 'B', 'D', 'I', 'Z', 'C'};
 
@@ -181,7 +191,7 @@ void print_page_curses(WINDOW *menu_win, uint8_t mempage, char *charbuff){
     for (int i=7; i>=0; i--){
       int pairnum = (((1 << i) & flags) > 0) + 1;
       attron(COLOR_PAIR(pairnum));
-      addch(flagschar[i]);
+      addch(flagschar[7-i]);
       attroff(COLOR_PAIR(pairnum));
       addch(' ');
     }

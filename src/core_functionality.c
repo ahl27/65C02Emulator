@@ -25,10 +25,9 @@ byte read_byte(byte *address){
   return (*address);
 }
 
-uint16_t read_address(byte offset){
-  uint16_t val = read_byte(memory+offset);
-  offset++;
-  val |= (read_byte(memory+offset) << 8);
+uint16_t read_address(uint16_t offset){
+  uint16_t val = (read_byte(memory+offset+1) << 8);
+  val |= read_byte(memory+offset);
   return(val);
 }
 
@@ -50,7 +49,7 @@ void set_pc(uint16_t value){
   return;
 }
 
-void execute_instruction(){
+int execute_instruction(){
   /*
    *   Instructions for the 65c02 usually follow a set pattern:
    *      - always 8 bits
@@ -66,6 +65,7 @@ void execute_instruction(){
    */
 
   uint8_t opcode = read_pc();
+
   uint8_t high = opcode >> 4;
   uint8_t low = opcode & 0xF;
 
@@ -85,7 +85,7 @@ void execute_instruction(){
         run_instruction_group1(address, aaa);
         break;
       case 2:
-        address = decode_addrmode_group23(bbb);
+        address = decode_addrmode_group23(bbb, aaa);
         run_instruction_group2(address, aaa);
         break;
       case 0:
@@ -100,7 +100,8 @@ void execute_instruction(){
 
         } else {
           // If we made it here, it's a standard Group 3 instruction
-          address = decode_addrmode_group23(bbb);
+          // (pass zero because the check for group 2 STX/LDX shouldn't execute)
+          address = decode_addrmode_group23(bbb, 0); 
           run_instruction_group3(address, aaa);
         }
         break;
@@ -112,12 +113,13 @@ void execute_instruction(){
         // ...so that's what we're going to do too
         address = decode_addrmode_group1(bbb);
         run_instruction_group1(address, aaa);
-        address = decode_addrmode_group23(bbb);
+        address = decode_addrmode_group23(bbb, aaa);
         run_instruction_group2(address, aaa);
         break;
     }
   }
-  return;
+  lastop = opcode;
+  return opcode;
 }
 
 /*
@@ -156,6 +158,7 @@ byte* decode_addrmode_group1(byte addrmode){
     
     case 5:        // zero page, X
       address = read_pc() + x;
+      address &= 0xFF;
       break;
     
     case 6:        // absolute, Y
@@ -180,7 +183,7 @@ byte* decode_addrmode_group1(byte addrmode){
   These are for Group 2/3 (cc == 10,00 opcodes) instructions 
   that aren't single-byte instructions
 */
-byte* decode_addrmode_group23(byte addrmode){
+byte* decode_addrmode_group23(byte addrmode, byte highbits){
   uint16_t address;
   switch(addrmode){
     case 0:       // #immediate
@@ -202,14 +205,17 @@ byte* decode_addrmode_group23(byte addrmode){
     // Case 4 is branching operations, we'll handle them separately
     
     case 5:       // zero page, X
-      address = read_pc() + x;
+      address = read_pc();
+      // need a special check here for LDX/STX
+      address += (highbits&6) == 4 ? y : x;
+      address &= 0xFF;
       break;
 
     // No case 6 exists
 
     case 7:       // absolute, X
       address = read_address(pc);
-      address += x;
+      address += (highbits&6) == 4 ? y : x;
       break;
   }
 

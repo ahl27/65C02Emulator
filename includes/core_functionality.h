@@ -2,8 +2,10 @@
 #define COREHEADERINCLUDE
 
 #include <stdio.h>
+#include <ncurses.h>
 #include "registers.h"
 #include "operations.h"
+
 
 #ifdef WIN32
   #include <windows.h>
@@ -37,7 +39,7 @@ byte read_byte(byte* address);
 void write_byte(byte* address, byte value);
 
 // Read address from memory in little-endian format
-uint16_t read_address(byte offset);
+uint16_t read_address(uint16_t offset);
 
 // read value at program counter and increment or set program counter directly 
 byte read_pc();
@@ -45,11 +47,11 @@ void set_pc(uint16_t value);
 
 // Runner function, decodes opcode and calls appropriate function
 // with correct addressing mode
-void execute_instruction();
+int execute_instruction();
 
 // Decode middle bytes to determine address to use for operation
 byte* decode_addrmode_group1(byte addrmode);
-byte* decode_addrmode_group23(byte addrmode);
+byte* decode_addrmode_group23(byte addrmode, byte highbits);
 
 // Decode high bytes to determine operation to do
 // operations are all in operations.c

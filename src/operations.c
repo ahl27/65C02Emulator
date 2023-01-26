@@ -93,7 +93,7 @@ void SBC(byte *addr){
   // Subtraction borrrowing from carry
   // Note that the 6502 implements this as just ADC 
   // using the ones complement of the value to subtract
-  byte onescomp = !(*addr);
+  byte onescomp = ~(*addr);
   ADC(&onescomp);
 	return;
 }
