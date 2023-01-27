@@ -32,5 +32,5 @@ This will open the GUI and display the memory and registers. Use the left/right 
 1. Flag display will be adjusted at a later date to support people with difficulty differentiating red/green
 2. GUI will look like garbage if the window is too small--make sure your window is large enough
 3. 65c02 instructions are not currently supported but will (probably) be implemented later
-4. Not all instructions have been tested; all loads/stores/transfers plus `ADC, SBC` are known to be working. More bugchecking is on the way.
+4. Not all instructions have been tested; all loads/stores/transfers plus `ADC, SBC` are known to be working. More testing on the way.
 5. Clock cycles are not quite the same as the original 6502, I'll try to get to it later.
