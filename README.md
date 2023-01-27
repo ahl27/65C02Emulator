@@ -2,7 +2,7 @@
 
 This is a C program to emulate a 65c02 processor.
 
-Not really intended for external use, I'm just writing it because it seemed like a fun exercise.
+Not really intended for external use, I'm just writing it because it seemed like a fun exercise. You can follow my blog posts about this project at [on my website](https://www.ahl27.com/tags/#emulator)!
 
 Priorities for this project are:
   1. Working emulation of 6502 instruction set
