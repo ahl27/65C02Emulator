@@ -31,8 +31,6 @@ void move_memory(size_t num_bytes){
 }
 
 void memory_explorer(){
-  // TODO: Make this interactive
-
   WINDOW *mem_win;
   int BUFF_LENGTH = 64;
   char FILLCHAR = ' ';
