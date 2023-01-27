@@ -1,6 +1,6 @@
 # 65c02 Emulator
 
-This is a C program to emulate a 65c02 processor. 
+This is a C program to emulate a 65c02 processor. Should run on OSX and Linux, likely will not on Windows.
 
 You can follow my blog posts about this project at [on my website](https://www.ahl27.com/tags/#emulator)!
 
@@ -34,3 +34,4 @@ This will open the GUI and display the memory and registers. Use the left/right 
 3. 65c02 instructions are not currently supported but will (probably) be implemented later
 4. Not all instructions have been tested; all loads/stores/transfers plus `ADC, SBC` are known to be working. More testing on the way.
 5. Clock cycles are not quite the same as the original 6502, I'll try to get to it later.
+6. This is not tested (nor expected to run) on Windows.
