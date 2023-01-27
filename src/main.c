@@ -126,7 +126,10 @@ uint8_t process_charbuff(char *arr, int arrlen, uint8_t mempage, char fill){
   char *ptr;
   uint8_t retval = mempage;
   if(arr[0] == 's'){
-    int num_instructions = (int)strtol(arr+1, &ptr, 10);
+    int offset = strncmp(arr, "step", 4) == 0 ? 4 : 1;
+    ptr = arr+offset;
+    while(*ptr==' ' && ptr) ptr++;
+    int num_instructions = (int)strtol(ptr, &ptr, 10);
     if (num_instructions == 0) num_instructions = 1;
     for (int i=0; i<num_instructions; i++)
       execute_instruction();
@@ -136,6 +139,18 @@ uint8_t process_charbuff(char *arr, int arrlen, uint8_t mempage, char fill){
     while (curval != 0){
       curval = execute_instruction();
     }
+  } else if (arr[0] == 'h') {
+      printw("\n\
+    \n************************************************\
+    \n* Arrows  : Navigate Memory                    *\
+    \n* NN      : jump to page 0xNN                  *\
+    \n* home    : jump to program counter page       *\
+    \n* (s)tep  : step forward one instruction       *\
+    \n* (s)tep n: step forward n instructions        *\
+    \n* (r)un   : run instructions until BRK         *\
+    \n* (h)elp  : help                               *\
+    \n* (q)uit  : quit                               *\
+    \n************************************************");
   } else {
     retval = (uint8_t)strtol(arr, &ptr, 16);
     if (ptr == arr) 
@@ -202,7 +217,7 @@ void print_page_curses(WINDOW *menu_win, uint8_t mempage, char *charbuff){
     }
     printw("\n       N V - B D I Z C");
   }
-  printw("\n\nPress left or right arrows to move pages, 's' to run an instruction, or quit to exit.\n> %s", charbuff);
+  printw("\n\nPress left or right arrows to move pages, 'h' for help, quit to exit.\n> %s", charbuff);
   refresh();
   return;
 }
