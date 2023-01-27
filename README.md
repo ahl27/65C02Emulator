@@ -1,6 +1,6 @@
 # 65c02 Emulator
 
-This is a C program to emulate a 65c02 processor. Should run on OSX and Linux, likely will not on Windows.
+This is a C program to emulate a 65c02 processor. Should run on OSX and Linux, I have no plans to support Windows (sorry!)
 
 You can follow my blog posts about this project at [on my website](https://www.ahl27.com/tags/#emulator)!
 
