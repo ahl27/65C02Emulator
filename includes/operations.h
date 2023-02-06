@@ -75,5 +75,8 @@ void RTI();
 
 void RTS();
 
-// Miscellaneous Instructions (to be added)
+// 65C02 Instruction Set
+
+void bit_set_clear(byte high);
+void test_and_branch(byte high);
 #endif

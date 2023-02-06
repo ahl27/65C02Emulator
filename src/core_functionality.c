@@ -107,14 +107,12 @@ uint8_t execute_instruction(){
         break;
 
       case 3:
-        // Note that there is no case 3
-        // Actual 6502 hardware would simultaneously execute case 2 and 1
-        // if a Case 3 was encountered.
-        // ...so that's what we're going to do too
-        address = decode_addrmode_group1(bbb);
-        run_instruction_group1(address, aaa);
-        address = decode_addrmode_group23(bbb, aaa);
-        run_instruction_group2(address, aaa);
+        // TODO: The 65C02 instruction set adds case 3 instructions
+        if (low == 0x7){
+          bit_set_clear(high);
+        } else if (low == 0xF){
+          test_and_branch(high);
+        }
         break;
     }
   }

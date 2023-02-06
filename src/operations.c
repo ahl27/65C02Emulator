@@ -387,3 +387,20 @@ void RTS(){
   pull_from_stack(&flags);
   return;
 }
+
+void bit_set_clear(byte high){
+  uint8_t addr = read_pc();
+  uint8_t val_to_write = read_byte(memory+addr);
+  val_to_write = val_to_write & (0<<(high&0x7)) | (high>>3<<(high&0x7));
+  write_byte(memory+addr, val_to_write);
+  return;
+}
+void test_and_branch(byte high){
+  uint8_t addr_to_test = read_pc();
+  int8_t offset = read_pc();
+  if ((read_byte(memory+addr_to_test) & (1<<(high&0x7))) == (high>>3<<(high&0x7))){
+    JMP(memory+pc+offset);
+  }
+  return;
+}
+
