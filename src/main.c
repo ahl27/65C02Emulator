@@ -154,6 +154,10 @@ uint8_t process_charbuff(char *arr, int arrlen, uint8_t mempage, char fill){
     if (ptr == arr) 
       retval = mempage;
   } 
+
+  // This does nothing, but it sometimes breaks with a bus error if 
+  // we don't print out lastop prior to returning for some reason
+  printw("\n%2X\r  ", lastop);
   clear_charbuff(arr, arrlen, fill);
 
   return retval;

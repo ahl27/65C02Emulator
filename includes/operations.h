@@ -69,7 +69,7 @@ void NOP();
 // Interrupt / Subroutine Instructions
 void BRK();
 
-void JSR(byte *addr);
+void JSR();
 
 void RTI();
 

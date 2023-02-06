@@ -354,7 +354,8 @@ void run_instruction_branching(uint8_t highbits){
 
   // Branch if flag is equal to value
   if( ((flags & (1 << shift)) > 0) == value ){
-    pc = addr;
+    //pc = addr;
+    set_pc(addr);
   }
 
   return;
@@ -490,16 +491,14 @@ void run_instruction_sbyte2(uint8_t highbits){
 */
 void run_instruction_interrupt(uint8_t highbits){
   // These will all be of the form 0aa0 0000
-  // so highbits >> 1 == aa
-  switch(highbits >> 1){
+  // we're passing in upper three bits (aaa0 0000)
+  switch(highbits){
     case 0:  
       BRK();
       break;
     case 1:     
       // This is the JSR Absolute instruction
-      // Kind of weirdly placed, but we can make it work by 
-      // just calling JSR with a pointer to the current memory location
-      JSR(memory+pc);
+      JSR();
       break;
     case 2:
       RTI();

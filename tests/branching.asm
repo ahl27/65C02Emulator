@@ -28,12 +28,13 @@ setA45:
 
 testSubroutine:
   ; Should store $20 at positions $0010-0015
+  brk
   ldx #$05
   lda #$20
   .(
     loop:
+      dex
       sta $10,X
-      dey
       bne loop
       rts
   .)

@@ -1,4 +1,5 @@
 #include "operations.h"
+//FILE *fp;
 
 /*********
   Group 1 Instructions
@@ -215,7 +216,10 @@ void BIT(byte *addr){
 
 void JMP(byte *addr){
   // This won't accurately recreate the indirect jump to last byte of page bug
-  uint16_t newaddr = read_address(*addr);
+  // addr is an offset
+  // we'll be passed the raw memory location, 
+  // but PC should just be the offset from memory
+  uint16_t newaddr = addr-memory;
   set_pc(newaddr);
 	return;
 }
@@ -286,7 +290,7 @@ void CPX(byte *addr){
 
 // Push from register to stack
 void push_to_stack(byte *registerptr){
-  uint16_t offset = 0x10 | stackpointer;
+  uint16_t offset = 0x100 | stackpointer;
   write_byte(memory+offset, *registerptr);
   stackpointer--;
   return;
@@ -295,7 +299,7 @@ void push_to_stack(byte *registerptr){
 // Pull from stack to register
 void pull_from_stack(byte *registerptr){
   stackpointer++;
-  uint16_t offset = 0x10 | stackpointer;
+  uint16_t offset = 0x100 | stackpointer;
   byte val = read_byte(memory+offset);
   // This only updates if we're writing to a register
   // So I'm going to update flags first, 
@@ -342,15 +346,17 @@ void BRK(){
 }
 
 void JSR(){
-  // Push status flags, low byte, high byte
+  // Push status flags, high byte, low byte
   // Note stack grows downward
+  uint16_t newloc = read_address(pc);
+  set_pc(pc+2);
   byte *val;
   push_to_stack(&flags);
-  *val = pc & 0xFF;
-  push_to_stack(val);
   *val = pc >> 8;
   push_to_stack(val);
-  JMP(memory+pc);
+  *val = pc & 0xFF;
+  push_to_stack(val);
+  JMP(memory+newloc);
   return;
 }
 
@@ -368,8 +374,10 @@ void RTS(){
   // -> (empty)
 
   // JMP on stackpointer+2 will pull (high << 8) | low
-  stackpointer += 2;
-  JMP(memory+(0x10 | stackpointer));
+  stackpointer += 1;
+  uint16_t addr = read_address(0x100 | stackpointer);
+  JMP(memory+addr);
+  stackpointer += 1;
 
   // stackpointer now at correct location, we can pull the status flags
   pull_from_stack(&flags);
