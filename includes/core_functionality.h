@@ -26,7 +26,7 @@
 
 // this is in nanoseconds, so 1000 = 1MHz
 #ifndef CLOCK_TIME
-  #define CLOCK_TIME 2
+  #define CLOCK_TIME 1
 #endif
 
 // resets registers and memory

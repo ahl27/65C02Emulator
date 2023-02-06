@@ -26,6 +26,4 @@ uint16_t address;
 // Memory
 byte memory[0x10000];
 
-int16_t lastop;
-
 #endif

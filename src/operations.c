@@ -350,12 +350,15 @@ void JSR(){
   // Note stack grows downward
   uint16_t newloc = read_address(pc);
   set_pc(pc+2);
-  byte *val;
+  byte val_to_push;
+
   push_to_stack(&flags);
-  *val = pc >> 8;
-  push_to_stack(val);
-  *val = pc & 0xFF;
-  push_to_stack(val);
+  val_to_push = pc >> 8;
+
+  push_to_stack(&val_to_push);
+  val_to_push = pc & 0xFF;
+
+  push_to_stack(&val_to_push);
   JMP(memory+newloc);
   return;
 }

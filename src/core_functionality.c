@@ -65,12 +65,10 @@ uint8_t execute_instruction(){
    */
 
   uint8_t opcode = read_pc();
-  lastop = opcode;
   if(opcode == 0) return 0;
 
   uint8_t high = opcode >> 4;
   uint8_t low = opcode & 0xF;
-
   // Check for single byte instructions first since they're easy
   if (low == 8){
     run_instruction_sbyte1(high);

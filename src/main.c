@@ -14,6 +14,7 @@ int main(int argc, char *argv[]){
     move_memory(bytes_read);
 
   //printf("\nHexdump:\n");
+  lastop = 0;
   memory_explorer();
   //printf("\nPage 0xCO Dump:\n");
   //hexdump_mempage(0xC0);
@@ -96,7 +97,7 @@ void memory_explorer(){
           ctr = 0;
         }
         else {
-          curpage = process_charbuff(charbuff, BUFF_LENGTH, curpage, FILLCHAR);
+          curpage = process_charbuff(charbuff, BUFF_LENGTH, curpage, FILLCHAR, mem_win);
           ctr = 0;
         }
         break;
@@ -120,9 +121,8 @@ void clear_charbuff(char *arr, int arrlen, char fill){
   return;
 }
 
-uint8_t process_charbuff(char *arr, int arrlen, uint8_t mempage, char fill){
+uint8_t process_charbuff(char *arr, int arrlen, uint8_t mempage, char fill, WINDOW *win){
   char *ptr;
-  uint8_t curval = 1;
   uint8_t retval = mempage;
   if(arr[0] == 's'){
     int offset = strncmp(arr, "step", 4) == 0 ? 4 : 1;
@@ -130,14 +130,20 @@ uint8_t process_charbuff(char *arr, int arrlen, uint8_t mempage, char fill){
     while(*ptr==' ' && ptr) ptr++;
     int num_instructions = (int)strtol(ptr, &ptr, 10);
     if (num_instructions == 0) num_instructions = 1;
+    uint8_t tmp = lastop;
+    lastop = 1;
     for (int i=0; i<num_instructions; i++){
-      curval = execute_instruction();
-      if (curval == 0) break;
+      lastop = execute_instruction();
+      if (lastop == 0) break;
     }
   } else if (arr[0] == 'r'){
     // run until a BRK command
-    while (curval != 0){
-      curval = execute_instruction();
+    lastop = 1;
+    while (lastop != 0){
+      lastop = execute_instruction();
+      sleep(CLOCK_TIME);
+      printw("\n%2X\r  ", lastop);
+      print_page_curses(win, retval, arr);
     }
   } else if (arr[0] == 'h') {
       printw("\n\
@@ -196,9 +202,7 @@ void print_page_curses(WINDOW *menu_win, uint8_t mempage, char *charbuff){
   printw("X: 0x%02X\t\t  Stack: 0x01%02X\n", x, stackpointer);
   printw("Y: 0x%02X\t\t", y);
   printw(" LastOp: ");
-  if (lastop >= 0){
-    printw("0x%02X", lastop&0xFF);
-  }
+  printw("0x%02X", lastop&0xFF);
   //printw("PC: 0x%04X\tStack: 0x01%02X\n\n", pc, stackpointer);
   char flagschar[] = {'N', 'V', '-', 'B', 'D', 'I', 'Z', 'C'};
 
