@@ -79,4 +79,15 @@ void RTS();
 
 void bit_set_clear(byte high);
 void test_and_branch(byte high);
+
+/*
+ * To be written:
+ * BRA
+ * STZ
+ * INA/DEA (INC/DEC)
+ * PHY/PLY/PHX/PLX
+ * TSB/TRB
+ * BIT #
+ * all zero-page indirect addressing modes (bbb=100, c=10)
+ */
 #endif
