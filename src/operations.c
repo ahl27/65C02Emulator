@@ -404,3 +404,27 @@ void test_and_branch(byte high){
   return;
 }
 
+void STZ(byte *addr){
+  write_byte(addr, 0);
+  return;
+}
+
+void TSB(byte *addr){
+  // This is implemented as M | A, Z set if M & A == 0
+  uint8_t mem = read_byte(addr);
+  uint8_t val = mem | a;
+  flags = (flags & 0xFD) | (((mem & a) == 0) << 1);
+  write_byte(addr, val);
+  return;
+}
+
+// Test and Reset Bits
+void TRB(byte *addr){
+  // This is implemented as M & (!A), Z set if M & A == 0
+  uint8_t mem = read_byte(addr);
+  uint8_t val = mem & (~a);
+  flags = (flags & 0xFD) | (((mem & a) == 0) << 1);
+  write_byte(addr, val);
+  return;
+}
+

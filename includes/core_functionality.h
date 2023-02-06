@@ -63,4 +63,7 @@ void run_instruction_sbyte1(uint8_t highbits);
 void run_instruction_sbyte2(uint8_t highbits);
 void run_instruction_interrupt(uint8_t highbits);
 
+// Additional 65C02 instructions
+bool try65C02opcode(uint8_t opcode);
+
 #endif

@@ -79,15 +79,8 @@ void RTS();
 
 void bit_set_clear(byte high);
 void test_and_branch(byte high);
+void STZ(byte *addr);
+void TSB(byte *addr);
+void TRB(byte *addr);
 
-/*
- * To be written:
- * BRA
- * STZ
- * INA/DEA (INC/DEC)
- * PHY/PLY/PHX/PLX
- * TSB/TRB
- * BIT #
- * all zero-page indirect addressing modes (bbb=100, c=10)
- */
 #endif

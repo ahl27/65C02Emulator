@@ -107,21 +107,69 @@ main:
   stx $66
 
   ;; PUSH/PULL COMMANDS
+  ldx #$FF
+  txs
+
   lda #$AA
-  sec
-  ;ldx #$BB
-  ;ldy #$CC
+  ldx #$BB
+  ldy #$CC
+  phy
+  phx
   pha
-  php
-  ;phx
-  ;phy
   ; Reverse the order
-  ;ply
-  ;plx
+  lda #0
+  ldx #0
+  ldy #0
+  ply
+  plx
   pla
   sta $70
-  ;stx $71
-  ;sty $72
+  stx $71
+  sty $72
+  sec
+  php
+  pla
+  sta $73
+
+  ;; STORE ZERO, INA
+  lda #$EF
+  ldx #$8
+  .(
+    loop:
+      inc
+      dex
+      sta $80,X
+      sta $90,X
+      bne loop
+  .)
+
+  ldx #$8
+  inc
+  .(
+    loop:
+      dec
+      dex
+      stz $90,X
+      sta $A0,X
+      bne loop
+  .)
+  sta $B0
+  sta $B1
+  sta $B2
+  stz $B0
+  ldx #$1
+  stz $00B0,X
+  stz $00B2
+
+  ;; TSB, TRB
+  ;; Using examples from http://www.6502.org/tutorials/65c02opcodes.html
+  lda #$A6
+  sta $B3
+  sta $B4
+
+  lda #$33
+  TRB $B3   ; Should set $B3 to $84
+  TSB $B4   ; Should set $B4 to $B7
   brk
 
 
@@ -132,8 +180,12 @@ main:
 ;;  0030    01 02 06 01 02 01 01 00   00 00 00 00 00 00 00 00   |................|
 ;;  0040    01 02 06 01 00 00 00 00   00 00 00 00 00 00 00 00   |................|
 ;;  0050    01 02 06 01 00 00 00 00   00 00 00 00 00 00 00 00   |................|
-;;  0060    AA AA AA AA AA FF BB 00   00 00 00 00 00 00 00 00   |................|
-;;  0070    01 00 00 00 00 00 00 00   00 00 00 00 00 00 00 00   |................|
+;;  0060    aa aa aa aa aa ff bb 00   00 00 00 00 00 00 00 00   |???????.........|
+;;  0070    cc bb aa 01 00 00 00 00   00 00 00 00 00 00 00 00   |???.............|
+;;  0080    f7 f6 f5 f4 f3 f2 f1 f0   00 00 00 00 00 00 00 00   |????????........|
+;;  0090    00 00 00 00 00 00 00 00   00 00 00 00 00 00 00 00   |................|
+;;  00a0    f0 f1 f2 f3 f4 f5 f6 f7   00 00 00 00 00 00 00 00   |????????........|
+;;  00b0    00 00 00 84 b7 00 00 00   00 00 00 00 00 00 00 00   |................|
 
 .dsb $fffa-*,$ff
 .word $00

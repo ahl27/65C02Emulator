@@ -72,7 +72,7 @@ uint8_t execute_instruction(){
   // Check for single byte instructions first since they're easy
   if (low == 8){
     run_instruction_sbyte1(high);
-  } else if (low == 0xA && high > 0x7){
+  } else if (low == 0xA){
     run_instruction_sbyte2(high);
   } else {
     uint8_t cc  = opcode & 0x03;             // AND with 0000 0011 = 0x03
@@ -82,17 +82,33 @@ uint8_t execute_instruction(){
     switch(cc){
       case 1:
         address = decode_addrmode_group1(bbb);
-        run_instruction_group1(address, aaa);
+        if (opcode == 0x89){
+          // 65C02 expanded set
+          BIT(address);
+        } else {
+          run_instruction_group1(address, aaa);
+        }
         break;
       case 2:
         address = decode_addrmode_group23(bbb, aaa);
-        run_instruction_group2(address, aaa);
+        if (bbb==4){
+          run_instruction_group1(address, aaa);
+        } else if (bbb==7 && aaa==4){
+          // 65C02 expanded set
+          STZ(address);
+        } else {
+          run_instruction_group2(address, aaa);
+        }
         break;
       case 0:
+        // check for some 65C02 opcodes here
+        if (try65C02opcode(opcode)) break;
+
         // cc == 0 is a little funky since it also includes branching and interrupts
-        if (bbb == 4){
+        if (bbb == 4 || opcode == 0x80){
           // Branching instructions are all aaa 100 00
-          run_instruction_branching(aaa);
+          // BRA is 0x80
+          run_instruction_branching(high);
 
         } else if (bbb == 0 && !(aaa & 0x4)){
           // interrupt expressions are all 0aa 000 00
@@ -107,7 +123,6 @@ uint8_t execute_instruction(){
         break;
 
       case 3:
-        // TODO: The 65C02 instruction set adds case 3 instructions
         if (low == 0x7){
           bit_set_clear(high);
         } else if (low == 0xF){
@@ -199,7 +214,9 @@ byte* decode_addrmode_group23(byte addrmode, byte highbits){
       pc += 2;
       break;
 
-    // Case 4 is branching operations, we'll handle them separately
+    case 4:       // zero page indirect
+      address = read_address(read_pc());
+      break;
     
     case 5:       // zero page, X
       address = read_pc();
@@ -327,9 +344,13 @@ void run_instruction_branching(uint8_t highbits){
   int8_t offset = read_pc();
   uint16_t addr = pc + offset;
   uint8_t shift = 0;
+  if (highbits == 8){
+    set_pc(addr);
+    return;
+  } 
 
-  byte flag = (highbits & 0x6) >> 1;
-  byte value = highbits & 1;
+  byte flag = (highbits & 0xC) >> 2;
+  byte value = (highbits>>1) & 1;
 
   switch(flag){
     case 0:         // negative flag
@@ -447,7 +468,24 @@ void run_instruction_sbyte1(uint8_t highbits){
 */
 void run_instruction_sbyte2(uint8_t highbits){
   switch(highbits){
-    // Highbits will always be at least 8
+    // Highbits will always be at least 8 for 6502
+    // 65C02 instructions add lower bit values
+    case 1:
+      // INC (INA)
+      INC(&a);
+      break;
+    case 3:
+      // DEC (DEA)
+      DEC(&a);
+      break;
+    case 5:
+      // PHY
+      push_to_stack(&y);
+      break;
+    case 7:
+      // PLY
+      pull_from_stack(&y);
+      break;
 
     // Transfer Operations
     case 8:
@@ -473,11 +511,13 @@ void run_instruction_sbyte2(uint8_t highbits){
       break;
 
     case 13:
-    case 14:
+      // PHX
+      push_to_stack(&x);
+      break;
+
     case 15:
-      // Don't really need this,
-      // but I'm including it for completeness
-      NOP();
+      // PLX
+      pull_from_stack(&x);
       break;
   }
   return;
@@ -506,3 +546,48 @@ void run_instruction_interrupt(uint8_t highbits){
   }
   return;
 }
+
+
+/*
+  Tries to execute one of the expanded 65C02 opcodes
+*/
+bool try65C02opcode(uint8_t opcode){
+  byte *addr;
+  uint8_t code = opcode;
+  // This approach is a little hacky, but it's the best way I could implement it
+  switch(opcode){
+    // STZ instructions (0x9E is handled elsewhere)
+    case 0x9C:
+      // abs
+      code = 0x8C; // Convert bbb to 3 for abs indexing
+    case 0x64:
+      // zp
+    case 0x74:
+      // zp,X
+      addr = decode_addrmode_group1((code & 0x1C) >> 2);
+      STZ(addr);
+      return true;
+
+
+    // TRB
+    case 0x14:
+      // zp
+    case 0x1C:
+      // abs
+
+    // TSB
+    case 0x04:
+      // zp
+    case 0x0C:
+      // abs
+      addr = decode_addrmode_group1((code & 0x0C) >> 2);
+      (code & 0xF0) > 0 ? TRB(addr) : TSB(addr);
+      return true;
+
+    default:
+      return false;
+  }
+}
+
+
+
