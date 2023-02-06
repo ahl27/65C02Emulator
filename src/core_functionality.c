@@ -49,7 +49,7 @@ void set_pc(uint16_t value){
   return;
 }
 
-int execute_instruction(){
+uint8_t execute_instruction(){
   /*
    *   Instructions for the 65c02 usually follow a set pattern:
    *      - always 8 bits
@@ -65,6 +65,8 @@ int execute_instruction(){
    */
 
   uint8_t opcode = read_pc();
+  lastop = opcode;
+  if(opcode == 0) return 0;
 
   uint8_t high = opcode >> 4;
   uint8_t low = opcode & 0xF;
@@ -118,7 +120,6 @@ int execute_instruction(){
         break;
     }
   }
-  lastop = opcode;
   return opcode;
 }
 

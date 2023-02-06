@@ -122,6 +122,7 @@ void clear_charbuff(char *arr, int arrlen, char fill){
 
 uint8_t process_charbuff(char *arr, int arrlen, uint8_t mempage, char fill){
   char *ptr;
+  uint8_t curval = 1;
   uint8_t retval = mempage;
   if(arr[0] == 's'){
     int offset = strncmp(arr, "step", 4) == 0 ? 4 : 1;
@@ -129,10 +130,11 @@ uint8_t process_charbuff(char *arr, int arrlen, uint8_t mempage, char fill){
     while(*ptr==' ' && ptr) ptr++;
     int num_instructions = (int)strtol(ptr, &ptr, 10);
     if (num_instructions == 0) num_instructions = 1;
-    for (int i=0; i<num_instructions; i++)
-      execute_instruction();
+    for (int i=0; i<num_instructions; i++){
+      curval = execute_instruction();
+      if (curval == 0) break;
+    }
   } else if (arr[0] == 'r'){
-    int curval = 1;
     // run until a BRK command
     while (curval != 0){
       curval = execute_instruction();

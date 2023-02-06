@@ -15,10 +15,11 @@ returnfromjmp:
   sta $00
 
   ; Testing jsr/rts/bne
+  ;jsr testSubroutine
+  ; Testing all other branching commands
+  jsr testBranches
   jsr testSubroutine
   brk
-
-  ;4c = 010 011 00
 
 
 
@@ -28,7 +29,6 @@ setA45:
 
 testSubroutine:
   ; Should store $20 at positions $0010-0015
-  brk
   ldx #$05
   lda #$20
   .(
@@ -36,8 +36,31 @@ testSubroutine:
       dex
       sta $10,X
       bne loop
-      rts
   .)
+  ;brk
+  rts
+
+testBranches:
+  ; BCC / BCS
+  ; Should store $F0-FF in 20-2F
+  ;brk
+  ldx #$00
+  lda #$F0
+  clc
+  .(
+    loop:
+      sta $20,X
+      inx
+      adc #$1
+      bcc loop
+      bcs end
+      lda #$AA
+      jmp loop
+    end:
+  .)
+  ;brk
+  rts
+
 
 
 ;;; Expected Ending Memory Map:

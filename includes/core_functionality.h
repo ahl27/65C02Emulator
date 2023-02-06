@@ -26,7 +26,7 @@
 
 // this is in nanoseconds, so 1000 = 1MHz
 #ifndef CLOCK_TIME
-  #define CLOCK_TIME 1
+  #define CLOCK_TIME 2
 #endif
 
 // resets registers and memory
@@ -47,7 +47,7 @@ void set_pc(uint16_t value);
 
 // Runner function, decodes opcode and calls appropriate function
 // with correct addressing mode
-int execute_instruction();
+uint8_t execute_instruction();
 
 // Decode middle bytes to determine address to use for operation
 byte* decode_addrmode_group1(byte addrmode);
