@@ -46,8 +46,9 @@ void ADC(byte *addr){
   }
 
   uint16_t res = a + (*addr) + (flags & 1);
-  uint8_t vflag = !((a ^ (*addr)) & 0x80) && ((a ^ (*addr)) * 0x80);
-  write_byte(&a, res & 0xFF);
+  uint8_t truncres = res & 0xFF;
+  uint8_t vflag = ((a ^ truncres) & ((*addr) ^ truncres) & 0x80) != 0;
+  write_byte(&a, truncres);
 
   // Set flags N,V,Z,C (0x3C = 0011 1100)
   flags = (flags & 0x3C) | 
